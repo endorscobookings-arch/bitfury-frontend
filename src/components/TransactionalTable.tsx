@@ -9,13 +9,35 @@ interface Transaction {
   date: string;
 }
 
+interface TransactionsResponse {
+  success: boolean;
+  transactions?: Array<{
+    id: number;
+    transaction_type: string;
+    amount: number;
+    status: string;
+    created_at: string;
+  }>;
+}
+
 export default function TransactionTable() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/transactions`)
       .then((res) => res.json())
-      .then((data) => setTransactions(data))
+      .then((data: TransactionsResponse) => {
+        const rows = data.transactions ?? [];
+        setTransactions(
+          rows.map((tx) => ({
+            id: tx.id,
+            type: tx.transaction_type,
+            amount: tx.amount,
+            status: tx.status,
+            date: tx.created_at,
+          }))
+        );
+      })
       .catch((err) => console.error(err));
   }, []);
 

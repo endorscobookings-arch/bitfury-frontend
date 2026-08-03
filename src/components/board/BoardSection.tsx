@@ -1,6 +1,7 @@
 import { useState } from "react";
-import BoardCard from "./BoardCard";
+import BoardCard, { type BoardMember } from "./BoardCard";
 import BoardModal from "./BoardModal";
+import { API_BASE_URL } from "../../config";
 
 const members: BoardMember[] = [
   {
@@ -23,19 +24,36 @@ const members: BoardMember[] = [
   },
 ];
 
+interface BoardProfile {
+  name: string;
+  position: string;
+  image: string;
+  bio: string;
+}
+
 export default function BoardSection() {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<BoardProfile | null>(null);
 
   async function openProfile(id: number) {
+    const member = members.find((item) => item.id === id);
+    if (!member) {
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/board-members/${id}`);
+      const response = await fetch(`${API_BASE_URL}/api/board-members/${id}`);
 
       if (!response.ok) {
         throw new Error("Unable to load biography.");
       }
 
       const data = await response.json();
-      setProfile(data);
+      setProfile({
+        name: data.name ?? member.name,
+        position: data.position ?? member.position,
+        image: member.image,
+        bio: data.biography ?? data.bio ?? "",
+      });
     } catch (error) {
       console.error(error);
     }
@@ -56,8 +74,8 @@ export default function BoardSection() {
       </div>
 
       {profile && (
-        <Boardmodal
-          profile={profile}
+        <BoardModal
+          member={profile}
           onClose={() => setProfile(null)}
         />
       )}
